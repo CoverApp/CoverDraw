@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">CoverDraw</string>
+    <string name="color">Color</string>
+    <string name="save">Save</string>
+    <string name="line_stroke">Line Stroke</string>
+    <string name="clear">Clear</string>
+    <string name="set_width">Set Width</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+</resources>

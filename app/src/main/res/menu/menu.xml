@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/undoId"
+        android:icon="@drawable/ic_baseline_undo_24"
+        android:title="@string/undo"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/redoId"
+        android:icon="@drawable/ic_baseline_redo_24"
+        android:title="@string/redo"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/clearId"
+        android:icon="@drawable/ic_baseline_delete_forever_24"
+        android:title="@string/clear"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/colorId"
+        android:icon="@drawable/ic_baseline_color_lens_24"
+        android:title="@string/color"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/lineStrokeId"
+        android:icon="@drawable/ic_baseline_edit_24"
+        android:title="@string/line_stroke"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/saveId"
+        android:icon="@drawable/ic_baseline_save_24"
+        android:title="@string/save"
+        app:showAsAction="always" />
+</menu>
