@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.*
+import android.graphics.drawable.BitmapDrawable
 import android.provider.MediaStore
 import android.util.AttributeSet
 import android.util.DisplayMetrics
@@ -13,6 +14,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import com.example.coverdraw.model.Drawing
+import com.example.coverdraw.model.Stencil
 import java.io.*
 import kotlin.math.abs
 
@@ -58,10 +60,14 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         bitmapCanvas.drawColor(Color.WHITE)
         for(drawing in pathMap){
             drawing.let {
-                paintLine.color = it.color
-                paintLine.strokeWidth = it.strokeWidth
-                paintLine.maskFilter = null
-                bitmapCanvas.drawPath(it.path, paintLine)
+                if(drawing.path != null) {
+                    paintLine.color = it.color
+                    paintLine.strokeWidth = it.strokeWidth!!
+                    paintLine.maskFilter = null
+                    bitmapCanvas.drawPath(it.path!!, paintLine)
+                } else{
+                    bitmapCanvas.drawBitmap(drawing.stencil!!.image!!, drawing.point.x.toFloat(), drawing.point.y.toFloat(), paintLine)
+                }
             }
         }
         canvas.drawBitmap(bitmap, 0F, 0F, paintScreen)
@@ -114,20 +120,20 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
                 //if the distance is significant enough to be considered a movement
                 if(deltaX >= TOUCH_TOLERANCE || deltaY >= TOUCH_TOLERANCE){
                     //move path to the new location
-                    path.path.quadTo(path.point.x.toFloat(), path.point.y.toFloat(), (newX + path.point.x)/2, (newY + path.point.y)/2)
+                    path.path!!.quadTo(path.point.x.toFloat(), path.point.y.toFloat(), (newX + path.point.x)/2, (newY + path.point.y)/2)
 
                     //store the new coordinates
                     path.point.x = newX.toInt()
                     path.point.y = newY.toInt()
 
-                    bitmapCanvas.drawPath(path.path, paintLine)
+                    bitmapCanvas.drawPath(path.path!!, paintLine)
                 }
     }
 
     private fun touchEnded(pointerId: Int) {
         val path = pathMap[pointerId]
  //       path.path.lineTo(path.point.x.toFloat(), path.point.y.toFloat())
-        bitmapCanvas.drawPath(path.path, paintLine)
+        path.path?.let { bitmapCanvas.drawPath(it, paintLine) }
     }
 
     fun setDrawingColor(color: Int){
@@ -144,6 +150,16 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
     fun getLineWidth(): Float{
         return paintLine.strokeWidth
+    }
+
+    fun setStencilImage(bm: Bitmap){
+        val point = Point()
+        point.x = 0
+        point.y = 0
+        val stencil = Stencil("", bm)
+        val draw = Drawing(paintLine.color, null, null, point, stencil)
+        pathMap.add(draw)
+        bitmapCanvas.drawBitmap(bm, 0F, 0F, paintLine)
     }
 
     fun clear() {
@@ -186,48 +202,48 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
 
 
-    fun saveImage(){
-        val timestamp = System.currentTimeMillis()
-        val filename = "CoverApp$timestamp"
-        val values = ContentValues()
-        values.put(MediaStore.Images.Media.TITLE, filename)
-        values.put(MediaStore.Images.Media.DATE_ADDED, timestamp)
-        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpg")
-
-        //get URI for the location to save the file
-        val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-
-        try {
-            val outputStream = context.contentResolver.openOutputStream(uri!!)
-
-            //copy the bitmap to the output stream
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream) //this is our image
-
-            try {
-                outputStream?.flush()
-                outputStream?.close()
-
-                val message = Toast.makeText(context, "Image saved", Toast.LENGTH_LONG)
-                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
-
-                message.show()
-            } catch (i: IOException){
-                val message = Toast.makeText(context, "Image NOT saved", Toast.LENGTH_LONG)
-                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
-
-                message.show()
-                i.printStackTrace()
-            }
-
-        } catch ( f: FileNotFoundException){
-            val message = Toast.makeText(context, "Image NOT saved", Toast.LENGTH_LONG)
-            message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
-
-            message.show()
-            f.printStackTrace()
-        }
-
-    }
+//    fun saveImage(){
+//        val timestamp = System.currentTimeMillis()
+//        val filename = "CoverApp$timestamp"
+//        val values = ContentValues()
+//        values.put(MediaStore.Images.Media.TITLE, filename)
+//        values.put(MediaStore.Images.Media.DATE_ADDED, timestamp)
+//        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpg")
+//
+//        //get URI for the location to save the file
+//        val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+//
+//        try {
+//            val outputStream = context.contentResolver.openOutputStream(uri!!)
+//
+//            //copy the bitmap to the output stream
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream) //this is our image
+//
+//            try {
+//                outputStream?.flush()
+//                outputStream?.close()
+//
+//                val message = Toast.makeText(context, "Image saved", Toast.LENGTH_LONG)
+//                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
+//
+//                message.show()
+//            } catch (i: IOException){
+//                val message = Toast.makeText(context, "Image NOT saved", Toast.LENGTH_LONG)
+//                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
+//
+//                message.show()
+//                i.printStackTrace()
+//            }
+//
+//        } catch ( f: FileNotFoundException){
+//            val message = Toast.makeText(context, "Image NOT saved", Toast.LENGTH_LONG)
+//            message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
+//
+//            message.show()
+//            f.printStackTrace()
+//        }
+//
+//    }
 
     fun saveToInternalStorage(): String? {
         val timestamp = System.currentTimeMillis()

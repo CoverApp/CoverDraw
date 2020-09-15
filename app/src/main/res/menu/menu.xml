@@ -3,6 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/addTemplateId"
+        android:icon="@drawable/ic_baseline_image_24"
+        android:title="@string/add_template"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/undoId"
         android:icon="@drawable/ic_baseline_undo_24"
         android:title="@string/undo"

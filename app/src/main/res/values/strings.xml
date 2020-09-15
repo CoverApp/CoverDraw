@@ -7,4 +7,8 @@
     <string name="set_width">Set Width</string>
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
+    <string name="resize">Resize</string>
+    <string name="add_template">Add Template</string>
+    <string name="add_stencil">Add Stencil</string>
+    <string name="cancel">Cancel</string>
 </resources>
