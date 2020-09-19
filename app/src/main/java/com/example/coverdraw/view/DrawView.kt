@@ -8,11 +8,10 @@ import android.graphics.drawable.BitmapDrawable
 import android.provider.MediaStore
 import android.util.AttributeSet
 import android.util.DisplayMetrics
-import android.view.ViewConfiguration
-import android.view.Gravity
-import android.view.MotionEvent
-import android.view.View
+import android.view.*
+import android.view.MotionEvent.INVALID_POINTER_ID
 import android.widget.Toast
+import androidx.core.view.MotionEventCompat
 import com.example.coverdraw.model.Drawing
 import com.example.coverdraw.model.Stencil
 import java.io.*
@@ -34,6 +33,9 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     private var clearedPathMap: ArrayList<Drawing> = ArrayList()
     private var pathMap: ArrayList<Drawing> = ArrayList()
     private var undo: ArrayList<Drawing> = ArrayList()
+
+//    private var stencilPlaced = false
+    private var mActivePointerId = INVALID_POINTER_ID
 
     private var paintLine: Paint = Paint().apply{
         color = Color.BLACK
@@ -75,20 +77,40 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+
         val actionIndex = event.actionIndex // pointer(finger, mouse..)
 
-        when (event.action) {
+        when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 touchStarted(event.getX(actionIndex), event.getY(actionIndex), event.getPointerId(actionIndex))
+                // Save the ID of this pointer (for dragging)
+                mActivePointerId = event.getPointerId( 0)
             }
             MotionEvent.ACTION_UP -> {
                 touchEnded(event.getPointerId(actionIndex))
+//                mActivePointerId = INVALID_POINTER_ID
+//                stencilPlaced = false
+            }
+            MotionEvent.ACTION_CANCEL -> {
+//                mActivePointerId = INVALID_POINTER_ID
+//                stencilPlaced = false
             }
             MotionEvent.ACTION_MOVE -> {
                 touchMoved(event)
             }
+//            MotionEvent.ACTION_POINTER_UP -> {
+//                val path = pathMap.last()
+//                            // This was our active pointer going up. Choose a new
+//                            // active pointer and adjust accordingly.
+//                            val newPointerIndex = 1
+//                            path.point.x = event.getX(newPointerIndex).toInt()
+//                            path.point.y = event.getX(newPointerIndex).toInt()
+//                            mActivePointerId = event.getPointerId(newPointerIndex)
+//
+//                stencilPlaced = false
+//            }
         }
-        invalidate()//redraw tge screen
+        invalidate()//redraw the screen
 
         return true
     }
@@ -125,8 +147,9 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
                     //store the new coordinates
                     path.point.x = newX.toInt()
                     path.point.y = newY.toInt()
-
-                    bitmapCanvas.drawPath(path.path!!, paintLine)
+//                    if(!stencilPlaced) {
+                        bitmapCanvas.drawPath(path.path!!, paintLine)
+//                    }
                 }
     }
 
@@ -160,6 +183,8 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         val draw = Drawing(paintLine.color, null, null, point, stencil)
         pathMap.add(draw)
         bitmapCanvas.drawBitmap(bm, 0F, 0F, paintLine)
+//        stencilPlaced = true
+        invalidate() // refresh the screen
     }
 
     fun clear() {
@@ -168,6 +193,7 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
             pathMap.clear()// removes all of the paths
             undo.clear()
             bitmap.eraseColor(Color.WHITE)
+//            stencilPlaced = false
             invalidate() // refresh the screen
         } else {
             Toast.makeText(context, "Nothing to clear", Toast.LENGTH_LONG).show()
@@ -177,6 +203,7 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     fun undo() {
         if (pathMap.size > 0) {
             undo.add(pathMap.removeAt(pathMap.size - 1))
+//            stencilPlaced = false
             invalidate() // add
         } else {
             Toast.makeText(context, "Nothing to undo", Toast.LENGTH_LONG).show()
@@ -187,11 +214,13 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         when {
             undo.size > 0 -> {
                 pathMap.add(undo.removeAt(undo.size - 1))
+//                stencilPlaced = false
                 invalidate()
             }
             clearedPathMap.size > 0 && pathMap.size == 0 -> {
                 pathMap = ArrayList(clearedPathMap)
                 clearedPathMap.clear()
+//                stencilPlaced = false
                 invalidate()
             }
             else -> {
@@ -245,34 +274,34 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 //
 //    }
 
-    fun saveToInternalStorage(): String? {
-        val timestamp = System.currentTimeMillis()
-        val filename = "CoverApp$timestamp"
-        val cw = ContextWrapper(context)
-        // path to /data/data/yourapp/app_data/imageDir
-        val directory: File = cw.getDir("imageDir", Context.MODE_PRIVATE)
-        // Create imageDir
-        val mypath = File(directory, "$filename.jpg")
-        var fos: FileOutputStream? = null
-        try {
-            fos = FileOutputStream(mypath)
-            // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            try {
-                fos?.close()
-                val message = Toast.makeText(context, "Image saved ${directory.absolutePath}", Toast.LENGTH_LONG)
-                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
-
-                message.show()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
-        return directory.absolutePath
-    }
+//    fun saveToInternalStorage(): String? {
+//        val timestamp = System.currentTimeMillis()
+//        val filename = "CoverApp$timestamp"
+//        val cw = ContextWrapper(context)
+//        // path to /data/data/yourapp/app_data/imageDir
+//        val directory: File = cw.getDir("imageDir", Context.MODE_PRIVATE)
+//        // Create imageDir
+//        val mypath = File(directory, "$filename.jpg")
+//        var fos: FileOutputStream? = null
+//        try {
+//            fos = FileOutputStream(mypath)
+//            // Use the compress method on the BitMap object to write image to the OutputStream
+//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        } finally {
+//            try {
+//                fos?.close()
+//                val message = Toast.makeText(context, "Image saved ${directory.absolutePath}", Toast.LENGTH_LONG)
+//                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
+//
+//                message.show()
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//            }
+//        }
+//        return directory.absolutePath
+//    }
 
     private fun loadImageFromStorage(path: String) {
         try {

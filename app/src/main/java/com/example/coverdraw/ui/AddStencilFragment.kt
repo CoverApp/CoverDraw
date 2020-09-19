@@ -20,9 +20,10 @@ import com.example.coverdraw.adapter.StencilRecyclerViewAdapter
 import com.example.coverdraw.data.DataManager
 import com.example.coverdraw.databinding.AddStencilDialogBinding
 import com.example.coverdraw.model.Stencil
+import com.example.coverdraw.view.DrawView
 
 
-class AddStencilFragment: DialogFragment() {
+class AddStencilFragment(val drawView: DrawView): DialogFragment() {
 
     private lateinit var binding: AddStencilDialogBinding
     private lateinit var adapterStencilList: StencilRecyclerViewAdapter
@@ -57,9 +58,14 @@ class AddStencilFragment: DialogFragment() {
         binding.stencilRecyclerViewId.itemAnimator = DefaultItemAnimator()
         binding.stencilRecyclerViewId.addItemDecoration(DividerItemDecoration(this.context, DividerItemDecoration.HORIZONTAL))
         binding.stencilRecyclerViewId.addItemDecoration(DividerItemDecoration(this.context, DividerItemDecoration.VERTICAL))
-        adapterStencilList = StencilRecyclerViewAdapter { selectedItem:Stencil->(activity as MainActivity?)!!.selectStencil(selectedItem)}
+        adapterStencilList = StencilRecyclerViewAdapter { selectedItem:Stencil-> selectStencil(selectedItem)}
         binding.stencilRecyclerViewId.adapter = adapterStencilList
         displayStencils()
+    }
+
+    private fun selectStencil(selectedItem: Stencil) {
+        selectedItem.image?.let { drawView.setStencilImage(it) }
+        this.dismiss()
     }
 
     private fun displayStencils() {

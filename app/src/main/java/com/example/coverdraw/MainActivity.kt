@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     private var defaultColor = Color.BLACK
     private lateinit var binding: AddStencilDialogBinding
     private lateinit var adapterStencilList: StencilRecyclerViewAdapter
-    private lateinit var addStencilFragment: AddStencilFragment
+    lateinit var addStencilFragment: AddStencilFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         val actionBar: ActionBar? = supportActionBar
         actionBar?.setDisplayShowTitleEnabled(false)
 
-        addStencilFragment = AddStencilFragment()
+        addStencilFragment = AddStencilFragment(drawView)
         //binding.lifecycleOwner = viewLifecycleOwner
     }
 
@@ -74,11 +74,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         return super.onOptionsItemSelected(item)
-    }
-
-    fun selectStencil(selectedItem: Stencil) {
-        selectedItem.image?.let { drawView.setStencilImage(it) }
-        addStencilFragment.dismiss()
     }
 
 //    private fun showAddStencilDialog() {
