@@ -7,7 +7,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -23,7 +22,7 @@ import yuku.ambilwarna.AmbilWarnaDialog
 import java.io.ByteArrayOutputStream
 
 
-class MainActivity : AppCompatActivity() {
+class DrawActivity : AppCompatActivity() {
 
     private lateinit var drawView: DrawView
     private lateinit var currentAlertDialog: AlertDialog.Builder
@@ -52,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         when (item.itemId) {
             R.id.clearId -> drawView.clear()
-            R.id.saveId -> saveAsBitmapIntent()
+            R.id.saveId -> drawView.saveToInternalStorage()
             R.id.colorId -> openColourPicker()
             R.id.lineStrokeId -> showLineWidthDialog()
             R.id.undoId -> drawView.undo()
@@ -110,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         val ambilWarnaDialog =
             AmbilWarnaDialog(this, defaultColor, object : AmbilWarnaDialog.OnAmbilWarnaListener {
                 override fun onCancel(dialog: AmbilWarnaDialog) {
-                    Toast.makeText(this@MainActivity, "Unavailable", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@DrawActivity, "Unavailable", Toast.LENGTH_LONG).show()
                 }
 
                 override fun onOk(dialog: AmbilWarnaDialog, color: Int) {

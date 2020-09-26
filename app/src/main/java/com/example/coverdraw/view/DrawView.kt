@@ -186,58 +186,14 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         }
     }
 
-
-
-    fun saveImage(){
-        val timestamp = System.currentTimeMillis()
-        val filename = "CoverApp$timestamp"
-        val values = ContentValues()
-        values.put(MediaStore.Images.Media.TITLE, filename)
-        values.put(MediaStore.Images.Media.DATE_ADDED, timestamp)
-        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpg")
-
-        //get URI for the location to save the file
-        val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-
-        try {
-            val outputStream = context.contentResolver.openOutputStream(uri!!)
-
-            //copy the bitmap to the output stream
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream) //this is our image
-
-            try {
-                outputStream?.flush()
-                outputStream?.close()
-
-                val message = Toast.makeText(context, "Image saved", Toast.LENGTH_LONG)
-                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
-
-                message.show()
-            } catch (i: IOException){
-                val message = Toast.makeText(context, "Image NOT saved", Toast.LENGTH_LONG)
-                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
-
-                message.show()
-                i.printStackTrace()
-            }
-
-        } catch ( f: FileNotFoundException){
-            val message = Toast.makeText(context, "Image NOT saved", Toast.LENGTH_LONG)
-            message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
-
-            message.show()
-            f.printStackTrace()
-        }
-    }
-
     fun saveToInternalStorage(): String? {
         val timestamp = System.currentTimeMillis()
         val filename = "CoverApp$timestamp"
         val cw = ContextWrapper(context)
-        // path to /data/data/yourapp/app_data/imageDir
-        val directory: File = cw.getDir("imageDir", Context.MODE_PRIVATE)
+        // path to /data/user/0/com.example.coverdraw/app_DisCover
+        val directory: File = cw.getDir("DisCover", Context.MODE_PRIVATE)
         // Create imageDir
-        val mypath = File(directory, "$filename.jpg")
+        val mypath = File(directory, "$filename.png")
         var fos: FileOutputStream? = null
         try {
             fos = FileOutputStream(mypath)
@@ -256,12 +212,12 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
                 e.printStackTrace()
             }
         }
-        return directory.absolutePath
+        return directory.absolutePath + "/" + filename
     }
 
     private fun loadImageFromStorage(path: String) {
         try {
-            val f = File(path, "profile.jpg")
+            val f = File(path, "profile.png")
             val b = BitmapFactory.decodeStream(FileInputStream(f))
 //            val img: ImageView = findViewById(R.id.imgPicker) as ImageView
 //            img.setImageBitmap(b)
