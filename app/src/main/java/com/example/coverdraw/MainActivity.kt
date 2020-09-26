@@ -1,5 +1,7 @@
 package com.example.coverdraw
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -18,6 +20,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.coverdraw.view.DrawView
 import yuku.ambilwarna.AmbilWarnaDialog
+import java.io.ByteArrayOutputStream
 
 
 class MainActivity : AppCompatActivity() {
@@ -49,7 +52,7 @@ class MainActivity : AppCompatActivity() {
 
         when (item.itemId) {
             R.id.clearId -> drawView.clear()
-            R.id.saveId -> drawView.saveToInternalStorage()
+            R.id.saveId -> saveAsBitmapIntent()
             R.id.colorId -> openColourPicker()
             R.id.lineStrokeId -> showLineWidthDialog()
             R.id.undoId -> drawView.undo()
@@ -116,5 +119,16 @@ class MainActivity : AppCompatActivity() {
                 }
             })
         ambilWarnaDialog.show() // add
+    }
+
+    private fun saveAsBitmapIntent(){
+        val bStream = ByteArrayOutputStream()
+        val bitmapSave = drawView.bitmap
+        bitmapSave.compress(Bitmap.CompressFormat.PNG, 100, bStream)
+        val byteArray = bStream.toByteArray()
+        val returnIntent = Intent()
+        returnIntent.putExtra("cover_bitmap", byteArray)
+        setResult(Activity.RESULT_OK,returnIntent)
+        finish()
     }
 }

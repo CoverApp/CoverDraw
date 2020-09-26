@@ -1,8 +1,10 @@
 package com.example.coverdraw.view
 
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.graphics.*
 import android.provider.MediaStore
 import android.util.AttributeSet
@@ -19,13 +21,13 @@ import kotlin.math.abs
 
 class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
-    //TODO Resize
     //TODO Add Template
+    // TODO Save return bitMap back.
 
     private val TOUCH_TOLERANCE: Int = ViewConfiguration.get(context).scaledTouchSlop
     private val STROKE_WIDTH = 7F
 
-    private lateinit var bitmap: Bitmap
+    lateinit var bitmap: Bitmap
     private lateinit var bitmapCanvas: Canvas
     private var paintScreen: Paint = Paint()
 
@@ -226,7 +228,6 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
             message.show()
             f.printStackTrace()
         }
-
     }
 
     fun saveToInternalStorage(): String? {
