@@ -18,58 +18,57 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.coverdraw.view.DrawView
+import kotlinx.android.synthetic.main.activity_draw.*
 import yuku.ambilwarna.AmbilWarnaDialog
 import java.io.ByteArrayOutputStream
 
 
 class DrawActivity : AppCompatActivity() {
 
-    private lateinit var drawView: DrawView
     private lateinit var currentAlertDialog: AlertDialog.Builder
     private lateinit var  dialogLineWidth: AlertDialog
     private var defaultColor = Color.BLACK
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_draw)
 
-        drawView = findViewById(R.id.drawView)
-
-        val actionBar: ActionBar? = supportActionBar
-        actionBar?.setDisplayShowTitleEnabled(false)
+        setupTools()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-
-        val inflater = menuInflater
-        inflater.inflate(R.menu.menu, menu)
-
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
-        when (item.itemId) {
-            R.id.clearId -> drawView.clear()
-            R.id.saveId -> drawView.saveToInternalStorage()
-            R.id.colorId -> openColourPicker()
-            R.id.lineStrokeId -> showLineWidthDialog()
-            R.id.undoId -> drawView.undo()
-            R.id.redoId -> drawView.redo()
-            else -> Log.e("ERROR", "Error Occured")
+    private fun setupTools(){
+        clearId.setOnClickListener {
+            draw_View.clear()
         }
-
-        return super.onOptionsItemSelected(item)
+        saveId.setOnClickListener {
+            draw_View.saveToInternalStorage()
+        }
+        colorId.setOnClickListener {
+            openColourPicker()
+        }
+        lineStrokeId.setOnClickListener {
+            showLineWidthDialog()
+        }
+        undoId.setOnClickListener {
+            draw_View.undo()
+        }
+        redoId.setOnClickListener {
+            draw_View.redo()
+        }
+        closeId.setOnClickListener {
+            this.finish()
+        }
     }
 
-    fun showLineWidthDialog(){
+
+    private fun showLineWidthDialog(){
         currentAlertDialog = AlertDialog.Builder(this)
         val view = layoutInflater.inflate(R.layout.stroke_width_dialog, null)
         val widthSeekBar = view.findViewById<SeekBar>(R.id.strokeWidthId)
         val setLineWidthButton = view.findViewById<Button>(R.id.widthDialogButton)
         val widthImageView = view.findViewById<ImageView>(R.id.editStrokeImageId)
         setLineWidthButton.setOnClickListener {
-            drawView.setLineWidth(widthSeekBar.progress)
+            draw_View.setLineWidth(widthSeekBar.progress)
             dialogLineWidth.dismiss()
             //currentAlertDialog
         }
@@ -80,7 +79,7 @@ class DrawActivity : AppCompatActivity() {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 
                 val p = Paint()
-                p.color = drawView.getDrawingColor()
+                p.color = draw_View.getDrawingColor()
                 p.strokeCap = Paint.Cap.ROUND
                 p.strokeWidth = progress.toFloat()
 
@@ -98,7 +97,7 @@ class DrawActivity : AppCompatActivity() {
                 // called when tracking the seekbar is stopped
             }
         })
-        widthSeekBar.progress = drawView.getLineWidth().toInt()
+        widthSeekBar.progress = draw_View.getLineWidth().toInt()
         currentAlertDialog.setView(view)
         dialogLineWidth = currentAlertDialog.create()
         dialogLineWidth.setTitle("Set Line Width")
@@ -114,15 +113,15 @@ class DrawActivity : AppCompatActivity() {
 
                 override fun onOk(dialog: AmbilWarnaDialog, color: Int) {
                     defaultColor = color
-                    drawView.setDrawingColor(color)
+                    draw_View.setDrawingColor(color)
                 }
             })
         ambilWarnaDialog.show() // add
     }
 
-    private fun saveAsBitmapIntent(){
+    fun loadProfileImage(bitmap: Bitmap){
         val bStream = ByteArrayOutputStream()
-        val bitmapSave = drawView.bitmap
+        val bitmapSave = draw_View.bitmap
         bitmapSave.compress(Bitmap.CompressFormat.PNG, 100, bStream)
         val byteArray = bStream.toByteArray()
         val returnIntent = Intent()
