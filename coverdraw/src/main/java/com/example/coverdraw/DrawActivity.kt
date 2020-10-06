@@ -41,7 +41,7 @@ class DrawActivity : AppCompatActivity() {
             draw_View.clear()
         }
         saveId.setOnClickListener {
-            draw_View.saveToInternalStorage()
+            saveImage()
         }
         colorId.setOnClickListener {
             openColourPicker()
@@ -58,6 +58,17 @@ class DrawActivity : AppCompatActivity() {
         closeId.setOnClickListener {
             this.finish()
         }
+    }
+
+    private fun saveImage()
+    {
+        val bStream = ByteArrayOutputStream()
+        val bitmap = draw_View.bitmap
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, bStream)
+        val byteArray = bStream.toByteArray()
+        val returnIntent = Intent()
+        returnIntent.putExtra("coverBookCoverPng", byteArray)
+        setResult(Activity.RESULT_OK,returnIntent)
     }
 
 
@@ -117,16 +128,5 @@ class DrawActivity : AppCompatActivity() {
                 }
             })
         ambilWarnaDialog.show() // add
-    }
-
-    fun loadProfileImage(bitmap: Bitmap){
-        val bStream = ByteArrayOutputStream()
-        val bitmapSave = draw_View.bitmap
-        bitmapSave.compress(Bitmap.CompressFormat.PNG, 100, bStream)
-        val byteArray = bStream.toByteArray()
-        val returnIntent = Intent()
-        returnIntent.putExtra("cover_bitmap", byteArray)
-        setResult(Activity.RESULT_OK,returnIntent)
-        finish()
     }
 }
