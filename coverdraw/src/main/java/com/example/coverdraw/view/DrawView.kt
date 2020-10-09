@@ -1,14 +1,9 @@
 package com.example.coverdraw.view
 
-import android.app.Activity
-import android.content.ContentValues
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.Intent
 import android.graphics.*
-import android.provider.MediaStore
 import android.util.AttributeSet
-import android.util.DisplayMetrics
 import android.view.ViewConfiguration
 import android.view.Gravity
 import android.view.MotionEvent
@@ -49,15 +44,17 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
-        if (::bitmap.isInitialized) bitmap.recycle()
-        bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        bitmapCanvas = Canvas(bitmap)
-        bitmapCanvas.drawColor(Color.WHITE)
+        if (::bitmap.isInitialized) {
+            bitmapCanvas = Canvas(bitmap)
+        } else {
+            bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            bitmapCanvas = Canvas(bitmap)
+            bitmapCanvas.drawColor(Color.WHITE)
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
         canvas.save()
-        bitmapCanvas.drawColor(Color.WHITE)
         for(drawing in pathMap){
             drawing.let {
                 paintLine.color = it.color

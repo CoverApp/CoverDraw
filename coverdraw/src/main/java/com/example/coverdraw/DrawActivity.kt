@@ -2,25 +2,20 @@ package com.example.coverdraw
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.os.Bundle
-import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
+import android.view.Gravity
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Toast
-import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.coverdraw.view.DrawView
 import kotlinx.android.synthetic.main.activity_draw.*
 import yuku.ambilwarna.AmbilWarnaDialog
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
 
 
 class DrawActivity : AppCompatActivity() {
@@ -28,11 +23,24 @@ class DrawActivity : AppCompatActivity() {
     private lateinit var currentAlertDialog: AlertDialog.Builder
     private lateinit var  dialogLineWidth: AlertDialog
     private var defaultColor = Color.BLACK
+    private val extraData = "coverDrawBackground"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_draw)
-
+        val filepath= intent.getStringExtra(extraData)
+        if(!filepath.isNullOrEmpty()){
+            try {
+                val fis = FileInputStream(File(filepath))
+                val options = BitmapFactory.Options()
+                options.inMutable = true
+                val bmp = BitmapFactory.decodeStream(fis, null, options)
+                draw_View.bitmap = Bitmap.createBitmap(bmp!!)
+                fis.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         setupTools()
     }
 
@@ -56,6 +64,7 @@ class DrawActivity : AppCompatActivity() {
             draw_View.redo()
         }
         closeId.setOnClickListener {
+            draw_View.bitmap.recycle()
             this.finish()
         }
     }
@@ -69,6 +78,9 @@ class DrawActivity : AppCompatActivity() {
         val returnIntent = Intent()
         returnIntent.putExtra("coverBookCoverPng", byteArray)
         setResult(Activity.RESULT_OK,returnIntent)
+        val message = Toast.makeText(this, "Book Cover saved", Toast.LENGTH_LONG)
+        message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
+        message.show()
     }
 
 
