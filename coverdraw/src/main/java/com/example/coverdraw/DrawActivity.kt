@@ -2,10 +2,7 @@ package com.example.coverdraw
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -24,6 +21,8 @@ import java.io.ByteArrayOutputStream
 
 
 class DrawActivity : AppCompatActivity() {
+
+    private val REQUEST_CODE_DRAW = 101
 
     private lateinit var currentAlertDialog: AlertDialog.Builder
     private lateinit var  dialogLineWidth: AlertDialog
@@ -69,6 +68,19 @@ class DrawActivity : AppCompatActivity() {
         val returnIntent = Intent()
         returnIntent.putExtra("coverBookCoverPng", byteArray)
         setResult(Activity.RESULT_OK,returnIntent)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (data != null && resultCode == Activity.RESULT_OK) {
+            when(requestCode){
+                REQUEST_CODE_DRAW -> {
+                    val result= data.getByteArrayExtra("coverDrawBackground")
+                    val bitmap = BitmapFactory.decodeByteArray(result, 0, result.size)
+                    draw_View.bitmap = bitmap
+                }
+            }
+        }
     }
 
 
