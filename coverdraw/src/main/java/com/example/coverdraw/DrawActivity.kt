@@ -72,7 +72,7 @@ class DrawActivity : AppCompatActivity() {
     private fun saveImage()
     {
         val bStream = ByteArrayOutputStream()
-        val bitmap = draw_View.bitmap
+        val bitmap = draw_View.getCanvas()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, bStream)
         val byteArray = bStream.toByteArray()
         val returnIntent = Intent()
@@ -133,7 +133,6 @@ class DrawActivity : AppCompatActivity() {
                 override fun onCancel(dialog: AmbilWarnaDialog) {
                     Toast.makeText(this@DrawActivity, "Unavailable", Toast.LENGTH_LONG).show()
                 }
-
                 override fun onOk(dialog: AmbilWarnaDialog, color: Int) {
                     defaultColor = color
                     draw_View.setDrawingColor(color)

@@ -16,15 +16,11 @@ import kotlin.math.abs
 
 class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
-    //TODO Add Template
-    // TODO Save return bitMap back.
-
     private val TOUCH_TOLERANCE: Int = ViewConfiguration.get(context).scaledTouchSlop
     private val STROKE_WIDTH = 7F
 
     lateinit var bitmap: Bitmap
-    private lateinit var bitmapCanvas: Canvas
-    private var paintScreen: Paint = Paint()
+    lateinit var clearedBitmap: Bitmap
 
     private var clearedPathMap: ArrayList<Drawing> = ArrayList()
     private var pathMap: ArrayList<Drawing> = ArrayList()
@@ -45,26 +41,28 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
         if (::bitmap.isInitialized) {
-            bitmapCanvas = Canvas(bitmap)
+            draw(Canvas(bitmap))
         } else {
             bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            bitmapCanvas = Canvas(bitmap)
-            bitmapCanvas.drawColor(Color.WHITE)
+            val canvas = Canvas(bitmap)
+            canvas.drawColor(Color.WHITE)
+            draw(Canvas(bitmap))
         }
     }
 
     override fun onDraw(canvas: Canvas) {
-        canvas.save()
+        super.onDraw(canvas)
+       // canvas.save()
+        canvas.drawBitmap(bitmap, 0F, 0F, paintLine)
         for(drawing in pathMap){
             drawing.let {
                 paintLine.color = it.color
                 paintLine.strokeWidth = it.strokeWidth
                 paintLine.maskFilter = null
-                bitmapCanvas.drawPath(it.path, paintLine)
+                canvas.drawPath(it.path, paintLine)
             }
         }
-        canvas.drawBitmap(bitmap, 0F, 0F, paintScreen)
-        canvas.restore()
+ //       canvas.restore()
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -72,7 +70,7 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                touchStarted(event.getX(actionIndex), event.getY(actionIndex), event.getPointerId(actionIndex))
+                touchStarted(event.getX(actionIndex), event.getY(actionIndex))
             }
             MotionEvent.ACTION_UP -> {
                 touchEnded(event.getPointerId(actionIndex))
@@ -86,17 +84,17 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         return true
     }
 
-    private fun touchStarted(x: Float, y: Float, pointerId: Int) {
-        val path = Path()// store path for given touch
-        val point = Point() // store the last point in the path
+    private fun touchStarted(x: Float, y: Float) {
+        val mPath = Path() // store path for given touch
+        val mPoint = Point() // store the last point in the path
 
-        val draw = Drawing(paintLine.color, paintLine.strokeWidth, path, point)
+        val draw = Drawing(paintLine.color, paintLine.strokeWidth, mPath, mPoint)
         pathMap.add(draw)
 
         //move to the coordinates of the touch
-        path.moveTo(x, y)
-        point.x = x.toInt()
-        point.y = y.toInt()
+        mPath.moveTo(x, y)
+        mPoint.x = x.toInt()
+        mPoint.y = y.toInt()
     }
 
 
@@ -118,15 +116,12 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
                     //store the new coordinates
                     path.point.x = newX.toInt()
                     path.point.y = newY.toInt()
-
-                    bitmapCanvas.drawPath(path.path, paintLine)
                 }
     }
 
     private fun touchEnded(pointerId: Int) {
         val path = pathMap[pointerId]
- //       path.path.lineTo(path.point.x.toFloat(), path.point.y.toFloat())
-        bitmapCanvas.drawPath(path.path, paintLine)
+        path.path.lineTo(path.point.x.toFloat(), path.point.y.toFloat())
     }
 
     fun setDrawingColor(color: Int){
@@ -147,9 +142,10 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
     fun clear() {
         if(pathMap.size > 0) {
-            clearedPathMap = ArrayList(pathMap)
+            clearedPathMap = pathMap.clone() as ArrayList<Drawing>
             pathMap.clear()// removes all of the paths
             undo.clear()
+            clearedBitmap = Bitmap.createBitmap(bitmap)
             bitmap.eraseColor(Color.WHITE)
             invalidate() // refresh the screen
         } else {
@@ -158,23 +154,31 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     }
 
     fun undo() {
-        if (pathMap.size > 0) {
-            undo.add(pathMap.removeAt(pathMap.size - 1))
-            invalidate() // add
-        } else {
-            Toast.makeText(context, "Nothing to undo", Toast.LENGTH_LONG).show()
+        when {
+            clearedPathMap.size > 0 && pathMap.size == 0 -> {//undo clear
+                pathMap = clearedPathMap.clone() as ArrayList<Drawing>
+                if (::clearedBitmap.isInitialized) {
+                    bitmap = Bitmap.createBitmap(clearedBitmap)
+                    clearedBitmap.eraseColor(Color.WHITE)
+                }
+                clearedPathMap.clear()
+                invalidate()
+            }
+            pathMap.size > 0 -> {
+                undo.add(pathMap.removeAt(pathMap.size - 1))
+                invalidate() // add
+            }
+            else -> {
+                Toast.makeText(context, "Nothing to undo", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
     fun redo() {
         when {
             undo.size > 0 -> {
-                pathMap.add(undo.removeAt(undo.size - 1))
-                invalidate()
-            }
-            clearedPathMap.size > 0 && pathMap.size == 0 -> {
-                pathMap = ArrayList(clearedPathMap)
-                clearedPathMap.clear()
+                val removed = undo.removeAt(undo.size - 1)
+                pathMap.add(removed)
                 invalidate()
             }
             else -> {
@@ -183,43 +187,11 @@ class DrawView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         }
     }
 
-    fun saveToInternalStorage(): String? {
-        val timestamp = System.currentTimeMillis()
-        val filename = "CoverApp$timestamp"
-        val cw = ContextWrapper(context)
-        // path to /data/user/0/com.example.coverdraw/app_DisCover
-        val directory: File = cw.getDir("DisCover", Context.MODE_PRIVATE)
-        // Create imageDir
-        val mypath = File(directory, "$filename.png")
-        var fos: FileOutputStream? = null
-        try {
-            fos = FileOutputStream(mypath)
-            // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            try {
-                fos?.close()
-                val message = Toast.makeText(context, "Image saved ${directory.absolutePath}", Toast.LENGTH_LONG)
-                message.setGravity(Gravity.CENTER, message.xOffset / 2, message.yOffset / 2)
-
-                message.show()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
-        return directory.absolutePath + "/" + filename
-    }
-
-    private fun loadImageFromStorage(path: String) {
-        try {
-            val f = File(path, "profile.png")
-            val b = BitmapFactory.decodeStream(FileInputStream(f))
-//            val img: ImageView = findViewById(R.id.imgPicker) as ImageView
-//            img.setImageBitmap(b)
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-        }
+    fun getCanvas(): Bitmap {
+        val currBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(currBitmap)
+        canvas.drawColor(Color.WHITE)
+        draw(canvas)
+        return currBitmap
     }
 }
